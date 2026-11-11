@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.venv/
+
+learning.db
+test_learning.db
+*.db-journal
