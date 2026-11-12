@@ -20,11 +20,10 @@ connection.execute(sql)
 
 # Decision loop
 while True:
-    decision = input("Do you want to add a new learning session or " \
-"view existing sessions? (add/view): ").strip().lower()
+    decision = input("Select your action: (add/view/edit): ").strip().lower()
     print(f"You selected: {decision}")
-    if decision not in ['add', 'view']:
-        print("Invalid input. Please enter 'add' or 'view'.")
+    if decision not in ['add', 'view', 'edit']:
+        print("Invalid input. Please enter 'add', 'view' or 'edit'.")
         continue
     break
 
@@ -34,7 +33,7 @@ if decision == "add":
         try:
             area = input("Enter the area of learning: ").strip()
             if not area:
-                raise ValueError("Area of Learning cannot be empty.")
+                raise ValueError("Area of learning cannot be empty.")
         except ValueError as error_area:
             print(f"Error: {error_area}")
             continue
@@ -66,11 +65,9 @@ if decision == "add":
         except ValueError:
             print("Please enter a whole number.")
             continue
-
         if minutes <= 0:
             print("Minutes must be greater than 0.")
             continue
-
         break
 
     while True:
@@ -86,6 +83,7 @@ if decision == "add":
 
     notes = input("Enter any notes: ").strip()
 
+
     insert_sql = """
     INSERT INTO sessions (area, subject, topic, minutes, date, notes)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -94,6 +92,7 @@ if decision == "add":
     connection.execute(insert_sql, (area, subject, topic, minutes, date, notes))
     connection.commit()
     print("Session saved successfully!")
+
 
 
 elif decision == "view":
@@ -109,6 +108,149 @@ elif decision == "view":
             )
     else:
         print("No sessions found.")
+
+
+elif decision == "edit":
+    while True:
+        try:
+            session_id = int(input("Enter the ID of the session you want to edit: "))
+        except ValueError:
+            print("Please enter a valid session ID.")
+            continue
+        break
+
+
+    select_sql = "SELECT id, area, subject, topic, minutes, date, notes FROM sessions WHERE id = ?"
+    cursor = connection.execute(select_sql, (session_id,))
+    session = cursor.fetchone()
+
+
+    if session is None:
+        print(f"No session found with ID {session_id}.")
+    else:
+        print("Found session:")
+        print(
+            f"ID: {session[0]} | Area: {session[1]} | "
+            f"Subject: {session[2]} | Topic: {session[3]} | "
+            f"Minutes: {session[4]} | Date: {session[5]} | Notes: {session[6]}"
+        )
+
+        while True:
+            choice = input("Choose your edit: (area/subject/topic/minutes/date/notes): "
+            ).strip().lower()
+            if choice not in ['area', 'subject', 'topic', 'minutes', 'date', 'notes']:
+                print("Invalid choice. Please enter 'area', 'subject', 'topic', 'minutes',"
+                " 'date' or 'notes'.")
+                continue
+            break
+
+        if choice == "area":
+            update_sql = """
+            UPDATE sessions
+            SET AREA = ?
+            WHERE id = ?
+            """
+            while True:
+                try:
+                    new_area = input("Enter the area of learning: ").strip()
+                    if not new_area:
+                        raise ValueError("Area of learning cannot be empty.")
+                except ValueError as error_area:
+                    print(f"Error: {error_area}")
+                    continue
+                break
+            connection.execute(update_sql, (new_area, session_id))
+            connection.commit()
+            print("Area updated successfully!")
+
+        if choice == "subject":
+            update_sql = """
+            UPDATE sessions
+            SET SUBJECT = ?
+            WHERE id = ?
+            """
+            while True:
+                try:
+                    new_subject = input("Enter the new subject: ").strip()
+                    if not new_subject:
+                        raise ValueError("The new subject cannot be empty.")
+                except ValueError as error_subject:
+                    print(f"Error: {error_subject}")
+                    continue
+                break
+            connection.execute(update_sql, (new_subject, session_id))
+            connection.commit()
+            print("Subject updated successfully!")
+
+        if choice == "topic":
+            update_sql = """
+            UPDATE sessions
+            SET TOPIC = ?
+            WHERE id = ?
+            """
+            while True:
+                try:
+                    new_topic = input("Enter the new topic: ").strip()
+                    if not new_topic:
+                        raise ValueError("The new topic cannot be empty.")
+                except ValueError as error_topic:
+                    print(f"Error: {error_topic}")
+                    continue
+                break
+            connection.execute(update_sql, (new_topic, session_id))
+            connection.commit()
+            print("Topic updated successfully!")
+
+        if choice == "minutes":
+            update_sql = """
+            UPDATE sessions
+            SET MINUTES = ?
+            WHERE id = ?
+            """
+            while True:
+                try:
+                    new_minutes = int(input("Enter the new number of minutes spent: "))
+                except ValueError:
+                    print("Please enter a whole number.")
+                    continue
+                if new_minutes <= 0:
+                    print("Minutes must be greater than 0.")
+                    continue
+                break
+            connection.execute(update_sql, (new_minutes, session_id))
+            connection.commit()
+            print("Minutes updated successfully!")
+
+        if choice == "date":
+            update_sql = """
+            UPDATE sessions
+            SET DATE = ?
+            WHERE id = ?
+            """
+            while True:
+                try:
+                    new_date = input("Enter the new date (YYYY-MM-DD): ").strip()
+                    if not new_date:
+                        raise ValueError("Date cannot be empty.")
+                    datetime.strptime(new_date, "%Y-%m-%d")
+                except ValueError as error_date:
+                    print(f"Error: {error_date}")
+                    continue
+                break
+            connection.execute(update_sql, (new_date, session_id))
+            connection.commit()
+            print("Date updated successfully!")
+
+        if choice == "notes":
+            update_sql = """
+            UPDATE sessions
+            SET NOTES = ?
+            WHERE id = ?
+            """
+            new_notes = input("Enter the updated notes: ").strip()
+            connection.execute(update_sql, (new_notes, session_id))
+            connection.commit()
+            print("Notes updated successfully!")
 
 
 connection.close()
