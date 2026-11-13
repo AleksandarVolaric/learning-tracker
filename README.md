@@ -3,11 +3,11 @@
 A small command-line project for learning how Python communicates with SQLite.
 This project is being built one version at a time as a learning exercise.
 
-## Current version: v0.3.0
+## Current version: v0.4.0
 
 The program uses a local SQLite database named `learning.db`. It lets you add
-a learning session, view all saved sessions, or edit any field of an existing
-session.
+a learning session, view all saved sessions, edit any field of an existing
+session, or delete a session.
 
 When adding a session, it collects:
 
@@ -33,6 +33,12 @@ area, subject, topic, minutes, date, or notes. Each change uses a parameterized
 SQL `UPDATE` with `WHERE id = ?` so only the selected session is changed. The
 update is committed to the database.
 
+When deleting a session, the program asks for its ID and checks whether it
+exists. If found, it displays the session and asks for confirmation. A
+confirmed deletion uses parameterized SQL `DELETE` with `WHERE id = ?` so only
+the selected session is removed. The change is committed; if the ID does not
+exist or the user cancels, no session is deleted.
+
 ## Run the program
 
 Python 3 is required. SQLite support is included with Python's standard
@@ -54,11 +60,10 @@ This project practices the Python-to-SQLite flow:
 
 1. Collect values with Python's `input()`.
 2. Open a database connection with `sqlite3.connect()`.
-3. Execute SQL to create a table, insert a row, and select rows.
-4. Update an existing row using SQL `UPDATE` and a `WHERE` condition.
+3. Execute SQL to create a table, insert, select, update, and delete rows.
+4. Use `WHERE` conditions to target a specific row during updates and deletes.
 5. Pass values separately using SQL `?` placeholders.
 6. Use `fetchone()` and `fetchall()` to retrieve rows, and loop through results.
 7. Save changes with `commit()` and close the connection.
 
-Delete, filtering, sorting, statistics, and relational tables are not
-implemented yet.
+Filtering, sorting, statistics, and relational tables are not implemented yet.

@@ -20,14 +20,14 @@ connection.execute(sql)
 
 # Decision loop
 while True:
-    decision = input("Select your action: (add/view/edit): ").strip().lower()
+    decision = input("Select your action: (add/view/edit/delete): ").strip().lower()
     print(f"You selected: {decision}")
-    if decision not in ['add', 'view', 'edit']:
-        print("Invalid input. Please enter 'add', 'view' or 'edit'.")
+    if decision not in ['add', 'view', 'edit', 'delete']:
+        print("Invalid input. Please enter 'add', 'view', 'edit' or 'delete'.")
         continue
     break
 
-
+# ADD loop
 if decision == "add":
     while True:
         try:
@@ -94,9 +94,12 @@ if decision == "add":
     print("Session saved successfully!")
 
 
-
+# VIEW loop
 elif decision == "view":
-    select_sql = "SELECT id, area, subject, topic, minutes, date, notes FROM sessions"
+    select_sql = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    """
     cursor = connection.execute(select_sql)
     sessions = cursor.fetchall()
     if sessions:
@@ -109,7 +112,7 @@ elif decision == "view":
     else:
         print("No sessions found.")
 
-
+# EDIT LOOP
 elif decision == "edit":
     while True:
         try:
@@ -120,7 +123,11 @@ elif decision == "edit":
         break
 
 
-    select_sql = "SELECT id, area, subject, topic, minutes, date, notes FROM sessions WHERE id = ?"
+    select_sql = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    WHERE id = ?
+    """
     cursor = connection.execute(select_sql, (session_id,))
     session = cursor.fetchone()
 
@@ -251,6 +258,48 @@ elif decision == "edit":
             connection.execute(update_sql, (new_notes, session_id))
             connection.commit()
             print("Notes updated successfully!")
+
+# DELETE LOOP
+elif decision == "delete":
+    while True:
+        try:
+            session_id = int(input("Enter the ID of the session you want to delete: "))
+        except ValueError:
+            print("Please enter a valid session ID.")
+            continue
+        break
+    
+    select_sql = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    WHERE id = ?
+    """
+    cursor = connection.execute(select_sql, (session_id,))
+    session = cursor.fetchone()
+
+    if session is None:
+        print(f"No session found with ID {session_id}.")
+    else:
+        print("Found session:")
+        print(
+            f"ID: {session[0]} | Area: {session[1]} | "
+            f"Subject: {session[2]} | Topic: {session[3]} | "
+            f"Minutes: {session[4]} | Date: {session[5]} | Notes: {session[6]}"
+        )
+        while True:
+            confirmation = input("Delete this session? (y/n): ").strip().lower()
+            if confirmation in ("y", "n"):
+                break
+            print("Please enter y or n.")
+
+        if confirmation == "y":
+            delete_sql = "DELETE FROM sessions WHERE id = ?"
+            connection.execute(delete_sql, (session_id,))
+            connection.commit()
+            print("Session deleted successfully!")
+        else:
+            print("Deletion canceled.")
+
 
 
 connection.close()
