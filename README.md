@@ -3,11 +3,15 @@
 A small command-line project for learning how Python communicates with SQLite.
 This project is being built one version at a time as a learning exercise.
 
-## Current version: v0.4.0
+## Current version: v0.4.1
 
-The program uses a local SQLite database named `learning.db`. It lets you add
-a learning session, view all saved sessions, edit any field of an existing
-session, or delete a session.
+The program uses a local SQLite database named `learning.db`. Its numbered
+menu lets you add a learning session, view all saved sessions, edit any field
+of an existing session, delete a session, or exit.
+
+The code is organized by responsibility: `main.py` handles the menu and
+user-facing flows, `database.py` contains SQLite operations, and
+`validation.py` contains reusable input checks.
 
 When adding a session, it collects:
 
@@ -31,7 +35,8 @@ When editing a session, the program asks for its ID and uses `fetchone()` to
 check whether that session exists. If found, the user can choose to update its
 area, subject, topic, minutes, date, or notes. Each change uses a parameterized
 SQL `UPDATE` with `WHERE id = ?` so only the selected session is changed. The
-update is committed to the database.
+update is committed to the database. The numbered edit menu also offers a
+cancel option.
 
 When deleting a session, the program asks for its ID and checks whether it
 exists. If found, it displays the session and asks for confirmation. A
@@ -50,6 +55,9 @@ From this project folder, run:
 python main.py
 ```
 
+Choose an action by entering its menu number: 1 to add, 2 to view, 3 to edit,
+4 to delete, or 5 to exit.
+
 The `learning.db` file is created in the current working directory if it does
 not already exist. Use a SQLite database viewer, such as DB Browser for SQLite,
 to view the rows in the `sessions` table.
@@ -64,6 +72,6 @@ This project practices the Python-to-SQLite flow:
 4. Use `WHERE` conditions to target a specific row during updates and deletes.
 5. Pass values separately using SQL `?` placeholders.
 6. Use `fetchone()` and `fetchall()` to retrieve rows, and loop through results.
-7. Save changes with `commit()` and close the connection.
+7. Save changes with `commit()` and close the connection cleanly on exit.
 
 Filtering, sorting, statistics, and relational tables are not implemented yet.
