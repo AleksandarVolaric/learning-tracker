@@ -6,6 +6,11 @@ from database import (
     get_all_sessions,
     get_session_by_id,
     update_session_field,
+    get_sessions_by_subject,
+    get_sessions_by_area,
+    get_sessions_by_date,
+    get_sessions_oldest_first,
+    get_sessions_newest_first,
 )
 from validation import (
     get_menu_choice,
@@ -119,6 +124,68 @@ def delete_session_flow(connection):
         print("Deletion canceled.")
 
 
+def filter_sessions_flow(connection):
+    print("\nFilter/sort sessions")
+    print("1. Filter by subject")
+    print("2. Filter by area")
+    print("3. Filter by date")
+    print("4. Show newest sessions first")
+    print("5. Show oldest sessions first")
+    print("6. Back")
+
+    choice = get_menu_choice(
+        "Choose an option: ",
+        ("1", "2", "3", "4", "5", "6"),
+        "Invalid choice. Enter a number from 1 to 6.",
+    )
+
+    if choice == "6":
+        return
+    elif choice == "1":
+        subject = get_non_empty_text("Enter a subject to filter by: ", "Subject")
+        sessions = get_sessions_by_subject(connection, subject)
+
+        if sessions:
+            for session in sessions:
+                display_session(session)
+        else:
+            print(f"No sessions found for subject '{subject}'.")
+    elif choice == "2":
+        area = get_non_empty_text("Enter an area to filter by: ", "Area")
+        sessions = get_sessions_by_area(connection, area)
+
+        if sessions:
+            for session in sessions:
+                display_session(session)
+        else:
+            print(f"No sessions found for area '{area}'.")
+    elif choice == "3":
+        date = get_valid_date("Enter a date to filter by (YYYY-MM-DD): ")
+        sessions = get_sessions_by_date(connection, date)
+
+        if sessions:
+            for session in sessions:
+                display_session(session)
+        else:
+            print(f"No sessions found for date '{date}'.")
+    elif choice == "4":
+        sessions = get_sessions_newest_first(connection)
+
+        if sessions:
+            for session in sessions:
+                display_session(session)
+        else:
+            print("No sessions found.")
+    elif choice == "5":
+        sessions = get_sessions_oldest_first(connection)
+
+        if sessions:
+            for session in sessions:
+                display_session(session)
+        else:
+            print("No sessions found.")
+
+
 def main():
     connection = connect_db()
     try:
@@ -130,12 +197,13 @@ def main():
             print("2. View sessions")
             print("3. Edit session")
             print("4. Delete session")
-            print("5. Exit")
+            print("5. Filter/sort sessions")
+            print("6. Exit")
 
             choice = get_menu_choice(
                 "Choose an option: ",
-                ("1", "2", "3", "4", "5"),
-                "Invalid choice. Enter a number from 1 to 5.",
+                ("1", "2", "3", "4", "5", "6"),
+                "Invalid choice. Enter a number from 1 to 6.",
             )
 
             if choice == "1":
@@ -146,6 +214,8 @@ def main():
                 edit_session_flow(connection)
             elif choice == "4":
                 delete_session_flow(connection)
+            elif choice == "5":
+                filter_sessions_flow(connection)
             else:
                 print("Goodbye!")
                 break

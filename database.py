@@ -70,3 +70,51 @@ def delete_session(connection, session_id):
     delete_sql = "DELETE FROM sessions WHERE id = ?"
     connection.execute(delete_sql, (session_id,))
     connection.commit()
+
+
+
+def get_sessions_by_subject(connection, subject):
+    where_sql_subject = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    WHERE subject = ?
+    """
+    cursor = connection.execute(where_sql_subject, (subject,))
+    return cursor.fetchall()
+
+def get_sessions_by_area(connection, area):
+    where_sql_area = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    WHERE area = ?
+    """
+    cursor = connection.execute(where_sql_area, (area,))
+    return cursor.fetchall()
+
+def get_sessions_by_date(connection, date):
+    where_sql_date = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    WHERE date = ?
+    """
+    cursor = connection.execute(where_sql_date, (date,))
+    return cursor.fetchall()
+
+
+def get_sessions_oldest_first(connection):
+    select_sql_asc = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    ORDER BY date ASC
+    """
+    cursor = connection.execute(select_sql_asc)
+    return cursor.fetchall()
+
+def get_sessions_newest_first(connection):
+    select_sql_desc = """
+    SELECT id, area, subject, topic, minutes, date, notes
+    FROM sessions
+    ORDER BY date DESC
+    """
+    cursor = connection.execute(select_sql_desc)
+    return cursor.fetchall()
