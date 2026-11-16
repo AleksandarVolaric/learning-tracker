@@ -118,3 +118,24 @@ def get_sessions_newest_first(connection):
     """
     cursor = connection.execute(select_sql_desc)
     return cursor.fetchall()
+
+
+def get_learning_totals(connection):
+    select_sql_totals = """
+    SELECT COUNT(*), COALESCE(SUM(minutes), 0)
+    FROM sessions
+    """
+    cursor = connection.execute(select_sql_totals)
+    return cursor.fetchone()
+
+
+def get_subject_statistics(connection):
+    select_sql_subjects = """
+    SELECT subject, SUM(minutes), COUNT(*)
+    FROM sessions
+    GROUP BY subject
+    ORDER BY SUM(minutes) DESC
+    """
+    cursor = connection.execute(select_sql_subjects)
+    return cursor.fetchall()
+

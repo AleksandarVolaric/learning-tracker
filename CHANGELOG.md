@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.6.0
+
+- Added overall statistics for total learning sessions and total minutes.
+- Added per-subject statistics for total time and session count.
+
 ## v0.5.0
 
 - Added session filters by subject, area, and date using SQL `WHERE`.

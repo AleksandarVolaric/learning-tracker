@@ -11,6 +11,8 @@ from database import (
     get_sessions_by_date,
     get_sessions_oldest_first,
     get_sessions_newest_first,
+    get_learning_totals,
+    get_subject_statistics,
 )
 from validation import (
     get_menu_choice,
@@ -186,6 +188,25 @@ def filter_sessions_flow(connection):
             print("No sessions found.")
 
 
+def statistics_flow(connection):
+    totals = get_learning_totals(connection)
+    session_count, total_minutes = totals
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+    subject_stats = get_subject_statistics(connection)
+
+    print(f"Total sessions: {session_count}")
+    print(f"Total minutes: {total_minutes} ({hours} hours and {minutes} minutes)")
+    print("\nSubject Statistics:")
+    for subject, subject_total_minutes, subject_session_count in subject_stats:
+        subject_hours = subject_total_minutes // 60
+        subject_minutes = subject_total_minutes % 60
+        print(
+            f"  {subject}: {subject_hours}h {subject_minutes}m "
+            f"({subject_session_count} sessions)"
+        )
+
+
 def main():
     connection = connect_db()
     try:
@@ -198,12 +219,13 @@ def main():
             print("3. Edit session")
             print("4. Delete session")
             print("5. Filter/sort sessions")
-            print("6. Exit")
+            print("6. Statistics")
+            print("7. Exit")
 
             choice = get_menu_choice(
                 "Choose an option: ",
-                ("1", "2", "3", "4", "5", "6"),
-                "Invalid choice. Enter a number from 1 to 6.",
+                ("1", "2", "3", "4", "5", "6", "7"),
+                "Invalid choice. Enter a number from 1 to 7.",
             )
 
             if choice == "1":
@@ -216,6 +238,8 @@ def main():
                 delete_session_flow(connection)
             elif choice == "5":
                 filter_sessions_flow(connection)
+            elif choice == "6":
+                statistics_flow(connection)
             else:
                 print("Goodbye!")
                 break
