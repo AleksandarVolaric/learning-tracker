@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.0
+
+- Added a `subjects` table and linked sessions to subjects with a foreign key.
+- Added `schema.sql` and enabled SQLite foreign-key enforcement per connection.
+- Updated session queries and subject statistics to use SQL `JOIN`.
+- Added numbered subject selection and an option to add a subject when needed.
+- Simplified database initialization and added numbered subject filtering.
+
 ## v0.6.0
 
 - Added overall statistics for total learning sessions and total minutes.

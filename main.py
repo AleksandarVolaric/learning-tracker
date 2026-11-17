@@ -1,8 +1,10 @@
 from database import (
     add_session,
     connect_db,
-    create_sessions_table,
     delete_session,
+    initialize_database,
+    get_or_create_subject,
+    get_all_subjects,
     get_all_sessions,
     get_session_by_id,
     update_session_field,
@@ -31,15 +33,46 @@ def display_session(session):
     )
 
 
+def select_subject_id(connection, allow_new=True):
+    subjects = get_all_subjects(connection)
+    for number, (_, name) in enumerate(subjects, start=1):
+        print(f"{number}. {name}")
+
+    if not subjects and not allow_new:
+        print("No subjects available.")
+        return None
+
+    valid_choice_count = len(subjects)
+    if allow_new:
+        add_subject_choice = str(len(subjects) + 1)
+        print(f"{add_subject_choice}. Add a new subject")
+        valid_choice_count += 1
+
+    valid_choices = tuple(
+        str(number) for number in range(1, valid_choice_count + 1)
+    )
+    choice = get_menu_choice(
+        "Choose a subject: ",
+        valid_choices,
+        f"Invalid choice. Enter a number from 1 to {valid_choice_count}.",
+    )
+
+    if allow_new and choice == add_subject_choice:
+        name = get_non_empty_text("Enter the new subject name: ", "Subject")
+        return get_or_create_subject(connection, name)
+
+    return subjects[int(choice) - 1][0]
+
+
 def add_session_flow(connection):
     area = get_non_empty_text("Enter the area of learning: ", "Area of learning")
-    subject = get_non_empty_text("Enter the subject: ", "Subject")
+    subject_id = select_subject_id(connection)
     topic = get_non_empty_text("Enter the topic: ", "Topic")
     minutes = get_positive_minutes("Enter the number of minutes spent: ")
     date = get_valid_date("Enter the date (YYYY-MM-DD): ")
     notes = input("Enter any notes: ").strip()
 
-    add_session(connection, area, subject, topic, minutes, date, notes)
+    add_session(connection, area, subject_id, topic, minutes, date, notes)
     print("Session saved successfully!")
 
 
@@ -85,7 +118,7 @@ def edit_session_flow(connection):
         value = get_non_empty_text("Enter the new area: ", "Area")
     elif choice == "2":
         field = "subject"
-        value = get_non_empty_text("Enter the new subject: ", "Subject")
+        value = select_subject_id(connection)
     elif choice == "3":
         field = "topic"
         value = get_non_empty_text("Enter the new topic: ", "Topic")
@@ -144,14 +177,16 @@ def filter_sessions_flow(connection):
     if choice == "6":
         return
     elif choice == "1":
-        subject = get_non_empty_text("Enter a subject to filter by: ", "Subject")
-        sessions = get_sessions_by_subject(connection, subject)
+        subject_id = select_subject_id(connection, allow_new=False)
+        if subject_id is None:
+            return
+        sessions = get_sessions_by_subject(connection, subject_id)
 
         if sessions:
             for session in sessions:
                 display_session(session)
         else:
-            print(f"No sessions found for subject '{subject}'.")
+            print("No sessions found for that subject.")
     elif choice == "2":
         area = get_non_empty_text("Enter an area to filter by: ", "Area")
         sessions = get_sessions_by_area(connection, area)
@@ -198,6 +233,8 @@ def statistics_flow(connection):
     print(f"Total sessions: {session_count}")
     print(f"Total minutes: {total_minutes} ({hours} hours and {minutes} minutes)")
     print("\nSubject Statistics:")
+    if subject_stats:
+        print(f"Most studied subject: {subject_stats[0][0]}")
     for subject, subject_total_minutes, subject_session_count in subject_stats:
         subject_hours = subject_total_minutes // 60
         subject_minutes = subject_total_minutes % 60
@@ -210,7 +247,7 @@ def statistics_flow(connection):
 def main():
     connection = connect_db()
     try:
-        create_sessions_table(connection)
+        initialize_database(connection)
 
         while True:
             print("\nPersonal Learning Tracker")
