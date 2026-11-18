@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.0
+
+- Added pytest coverage for database operations using isolated in-memory databases.
+- Finalized project documentation and release verification guidance.
+
 ## v0.7.0
 
 - Added a `subjects` table and linked sessions to subjects with a foreign key.

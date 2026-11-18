@@ -1,120 +1,101 @@
 # Personal Learning Tracker
 
-A small command-line project for learning how Python communicates with SQLite.
-This project is being built one version at a time as a learning exercise.
+A beginner-friendly command-line project for practicing Python and SQLite.
+Record learning sessions, organize them by subject, and review your learning
+time from a local database.
 
-## Current version: v0.7.0
+## Features
 
-The program uses a local SQLite database named `learning.db`. Its numbered
-menu lets you add a learning session, view all saved sessions, edit any field
-of an existing session, delete a session, filter or sort sessions, view
-statistics, or exit.
-
-The code is organized by responsibility: `main.py` handles the menu and
-user-facing flows, `database.py` contains SQLite operations, `validation.py`
-contains reusable input checks, and `schema.sql` defines the database tables.
-
-When adding a session, it collects:
-
-- Area (for example, School or Private)
-- A subject selected from a numbered list
-- Topic
-- Minutes spent
-- Date in `YYYY-MM-DD` format
-- Optional notes
-
-If the subject is not listed, the user can choose the final numbered option to
-add it. An existing subject name is reused rather than added a second time.
-The program checks that required text fields are not blank, minutes is a
-positive whole number, and the date is valid. It then inserts the session
-using parameterized SQL, commits the change, and closes the database
-connection.
+- Add, view, edit, and delete learning sessions (full CRUD).
+- Choose subjects from numbered lists, or add a new subject when needed.
+- Filter sessions by subject, area, or date.
+- Sort sessions by date, oldest first or newest first.
+- View total sessions, total learning time, and time spent per subject.
+- See which subject has the most recorded learning time.
+- Use a relational SQLite schema with visible SQL `JOIN` queries.
 
 ## Database structure
 
-`schema.sql` defines two relational tables:
+The database has two tables, defined in `schema.sql`:
 
-- `subjects`: one row per subject, with an integer primary key and a unique,
-  required name.
-- `sessions`: one row per learning session. Its `subject_id` is a required
-  foreign key that references `subjects.id`.
+- `subjects`: stores each subject once. `id` is the primary key and `name` is
+  required and unique.
+- `sessions`: stores each learning session. `id` is its primary key, and
+  `subject_id` is a required foreign key referencing `subjects.id`.
 
-This is a one-to-many relationship: one subject can be referenced by many
-sessions. For example, several session rows can store the same `subject_id`
-for Python, while the name `Python` is stored only once in `subjects`.
+This is a one-to-many relationship: one subject can be linked to many
+sessions. A session stores the subject ID, while queries use a SQL `JOIN` to
+show the subject name in the application. SQLite foreign-key enforcement is
+enabled when the application opens its database connection.
 
-Session queries use a SQL `JOIN` between `sessions.subject_id` and
-`subjects.id`. This lets the database store a subject ID while the CLI
-continues to display its readable name. SQLite foreign-key enforcement is
-enabled on every connection in `database.py`.
+The application creates missing tables from `schema.sql` at startup. It does
+not migrate older database formats. If upgrading a database from before
+v0.7.0, back it up and create a fresh database before using this version.
 
-The application creates the tables from `schema.sql` when it starts. It does
-not migrate older database formats. If you have a v0.6.0 database, back it up
-if needed, then delete it before starting v0.7.0; this creates a fresh
-relational database.
+## Project structure
 
-When viewing sessions, the program uses SQL `SELECT` to retrieve all rows,
-`fetchall()` to return them to Python, and a loop to display each session in
-the terminal. If there are no saved sessions, it displays a message.
+```text
+main.py          Numbered menu and application flows
+database.py      SQLite connection and database queries
+validation.py    Reusable checks for user input
+schema.sql       Subjects and sessions table definitions
+tests/
+  test_database.py  Automated database tests
+learning.db      Local database created when the application runs (ignored)
+```
 
-When editing a session, the program asks for its ID and uses `fetchone()` to
-check whether that session exists. If found, the user can choose to update its
-area, subject, topic, minutes, date, or notes. Choosing a subject displays
-numbered subject names; the application stores the chosen subject ID. Each
-change uses a parameterized SQL `UPDATE` with `WHERE id = ?` so only the
-selected session is changed. The update is committed to the database. The
-numbered edit menu also offers a cancel option.
+## Requirements
 
-When deleting a session, the program asks for its ID and checks whether it
-exists. If found, it displays the session and asks for confirmation. A
-confirmed deletion uses parameterized SQL `DELETE` with `WHERE id = ?` so only
-the selected session is removed. The change is committed; if the ID does not
-exist or the user cancels, no session is deleted.
+- Python 3
+- Pytest to run the automated tests
 
-When filtering and sorting, the program can show sessions by subject, area, or
-date using SQL `WHERE` queries. Subject filtering uses a numbered subject
-choice and filters by its ID. It can also show newest-first or oldest-first
-using SQL `ORDER BY date DESC` or `ORDER BY date ASC`.
+The application uses Python's built-in `sqlite3` module; it has no external
+runtime dependencies. Install pytest if it is not already available:
 
-When viewing statistics, the program shows the total number of sessions and
-the total time spent learning. It also uses a `JOIN` and `GROUP BY` to show
-the time spent and session count for each subject, ordered by total time, and
-labels the most-studied subject.
+```text
+python -m pip install pytest
+```
 
-## Run the program
+## Run the application
 
-Python 3 is required. SQLite support is included with Python's standard
-library, so no additional database package is needed.
-
-From this project folder, run:
+From the project folder, run:
 
 ```text
 python main.py
 ```
 
-Choose an action by entering its menu number: 1 to add, 2 to view, 3 to edit,
-4 to delete, 5 to filter/sort, 6 to view statistics, or 7 to exit. The
-filter/sort submenu offers filters by subject, area, and date, plus
-newest-first and oldest-first sorting.
+The numbered main menu lets you add, view, edit, delete, filter/sort sessions,
+view statistics, or exit. For example, choose **1** to add a session, enter its
+area, select a numbered subject (or add one), then enter the topic, minutes,
+date, and optional notes. The application creates `learning.db` in the
+project's current working directory if it does not exist.
 
-The `learning.db` file is created in the current working directory if it does
-not already exist. Use a SQLite database viewer, such as DB Browser for SQLite,
-to view the rows in the `sessions` table.
+## Run the tests
 
-## Learning goals
+From the project folder, run:
 
-This project practices the Python-to-SQLite flow:
+```text
+python -m pytest
+```
 
-1. Collect values with Python's `input()`.
-2. Open a database connection with `sqlite3.connect()`.
-3. Execute SQL to create a table, insert, select, update, and delete rows.
-4. Use `WHERE` to filter rows and target specific rows during updates/deletes.
-5. Use `ORDER BY` with `ASC` and `DESC` to sort dates.
-6. Pass values separately using SQL `?` placeholders.
-7. Use `fetchone()` and `fetchall()` to retrieve rows, and loop through results.
-8. Save changes with `commit()` and close the connection cleanly on exit.
-9. Use SQL aggregate functions such as `COUNT()` and `SUM()` with `GROUP BY`
-   to summarize learning sessions.
-10. Use primary keys, foreign keys, and a one-to-many relationship to
-    normalize related data.
-11. Use SQL `JOIN` to retrieve readable subject names from related tables.
+The tests use a fresh in-memory SQLite database for each test. They do not
+open, modify, or delete your personal `learning.db`.
+
+## Technologies and learning goals
+
+This project uses Python, SQLite, SQL, and pytest. It practices:
+
+- Python functions, input handling, and a numbered command-line menu.
+- SQL `INSERT`, `SELECT`, `UPDATE`, and `DELETE`.
+- Parameterized queries, `WHERE`, and `ORDER BY`.
+- Aggregate functions such as `COUNT()` and `SUM()`, with `GROUP BY`.
+- Primary keys, foreign keys, and one-to-many relationships.
+- SQL `JOIN` to retrieve readable data from related tables.
+- Testing database functions with an isolated in-memory database.
+
+## Privacy
+
+`learning.db` is a local file containing your learning data and is ignored by
+Git. The automated tests use only in-memory databases. Check `git status`
+before publishing to ensure no personal database or other private data is
+included.
